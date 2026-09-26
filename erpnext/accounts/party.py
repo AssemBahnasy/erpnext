@@ -908,6 +908,28 @@ def validate_party_frozen_disabled(company, party_type, party_name):
 				frappe.msgprint(_("{0} {1} is not active").format(party_type, party_name), alert=True)
 
 
+def validate_party_belongs_to_company(company, party_type, party, row=None):
+	"""Refuse an Employee or Shareholder that belongs to a different company."""
+	if frappe.flags.ignore_party_validation:
+		return
+
+	if party_type not in ("Employee", "Shareholder") or not (company and party):
+		return
+
+	party_company = frappe.get_cached_value(party_type, party, "company")
+
+	if party_company and party_company != company:
+		if row:
+			msg = _("Row {0}: {1} {2} does not belong to company {3}").format(
+				row, _(party_type), frappe.bold(party), frappe.bold(company)
+			)
+		else:
+			msg = _("{0} {1} does not belong to company {2}").format(
+				_(party_type), frappe.bold(party), frappe.bold(company)
+			)
+		frappe.throw(msg)
+
+
 def validate_account_party_type(self):
 	if self.is_cancelled:
 		return

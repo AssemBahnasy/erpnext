@@ -27,7 +27,7 @@ from erpnext.accounts.doctype.repost_accounting_ledger.repost_accounting_ledger 
 	validate_docs_for_voucher_types,
 )
 from erpnext.accounts.doctype.tax_withholding_entry.tax_withholding_entry import JournalTaxWithholding
-from erpnext.accounts.party import get_party_account
+from erpnext.accounts.party import get_party_account, validate_party_belongs_to_company
 from erpnext.accounts.services.gl_validator import validate_opening_entry_against_pcv
 from erpnext.accounts.utils import (
 	cancel_exchange_gain_loss_journal,
@@ -466,6 +466,8 @@ class JournalEntry(AccountsController):
 
 	def validate_party(self):
 		for d in self.get("accounts"):
+			validate_party_belongs_to_company(self.company, d.party_type, d.party, row=d.idx)
+
 			account_type = frappe.get_cached_value("Account", d.account, "account_type")
 
 			if account_type in ["Receivable", "Payable"]:

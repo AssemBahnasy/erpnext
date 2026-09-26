@@ -40,6 +40,7 @@ from erpnext.accounts.party import (
 	complete_contact_details,
 	get_default_contact,
 	get_party_account,
+	validate_party_belongs_to_company,
 	validate_party_company,
 )
 from erpnext.accounts.utils import (
@@ -642,6 +643,8 @@ class PaymentEntry(AccountsController):
 	def validate_party_details(self):
 		if self.party and not frappe.db.exists(self.party_type, self.party):
 			frappe.throw(_("{0} {1} does not exist").format(_(self.party_type), self.party))
+
+		validate_party_belongs_to_company(self.company, self.party_type, self.party)
 
 	def set_exchange_rate(self, ref_doc=None):
 		self.set_source_exchange_rate(ref_doc)

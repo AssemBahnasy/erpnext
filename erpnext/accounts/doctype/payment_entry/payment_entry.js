@@ -98,6 +98,25 @@ frappe.ui.form.on("Payment Entry", {
 			};
 		});
 
+		frm.set_query("party", function () {
+			if (frm.doc.party_type == "Employee") {
+				return {
+					query: "erpnext.controllers.queries.employee_query",
+					filters: {
+						company: frm.doc.company,
+					},
+				};
+			} else if (["Customer", "Supplier"].includes(frm.doc.party_type)) {
+				return erpnext.queries.party(frm.doc);
+			} else if (frm.doc.party_type == "Shareholder") {
+				return {
+					filters: {
+						company: frm.doc.company,
+					},
+				};
+			}
+		});
+
 		frm.set_query("contact_person", function () {
 			if (frm.doc.party) {
 				return {
@@ -303,8 +322,8 @@ frappe.ui.form.on("Payment Entry", {
 		frm.toggle_display(
 			"target_exchange_rate",
 			frm.doc.received_amount &&
-				frm.doc.paid_to_account_currency != company_currency &&
-				frm.doc.paid_from_account_currency != frm.doc.paid_to_account_currency
+			frm.doc.paid_to_account_currency != company_currency &&
+			frm.doc.paid_from_account_currency != frm.doc.paid_to_account_currency
 		);
 
 		frm.toggle_display("base_paid_amount", frm.doc.paid_from_account_currency != company_currency);
@@ -324,24 +343,24 @@ frappe.ui.form.on("Payment Entry", {
 		frm.toggle_display(
 			"base_received_amount",
 			frm.doc.paid_to_account_currency != company_currency &&
-				frm.doc.paid_from_account_currency != frm.doc.paid_to_account_currency &&
-				frm.doc.base_paid_amount != frm.doc.base_received_amount
+			frm.doc.paid_from_account_currency != frm.doc.paid_to_account_currency &&
+			frm.doc.base_paid_amount != frm.doc.base_received_amount
 		);
 
 		frm.toggle_display(
 			"received_amount",
 			frm.doc.payment_type == "Internal Transfer" ||
-				frm.doc.paid_from_account_currency != frm.doc.paid_to_account_currency
+			frm.doc.paid_from_account_currency != frm.doc.paid_to_account_currency
 		);
 
 		frm.toggle_display(
 			["base_total_allocated_amount"],
 			frm.doc.paid_amount &&
-				frm.doc.received_amount &&
-				frm.doc.base_total_allocated_amount &&
-				((frm.doc.payment_type == "Receive" &&
-					frm.doc.paid_from_account_currency != company_currency) ||
-					(frm.doc.payment_type == "Pay" && frm.doc.paid_to_account_currency != company_currency))
+			frm.doc.received_amount &&
+			frm.doc.base_total_allocated_amount &&
+			((frm.doc.payment_type == "Receive" &&
+				frm.doc.paid_from_account_currency != company_currency) ||
+				(frm.doc.payment_type == "Pay" && frm.doc.paid_to_account_currency != company_currency))
 		);
 
 		var party_amount = frm.doc.payment_type == "Receive" ? frm.doc.paid_amount : frm.doc.received_amount;
@@ -478,22 +497,6 @@ frappe.ui.form.on("Payment Entry", {
 			frm.set_value("party_type", "");
 			frappe.throw(__("Party can only be one of {0}", [party_types.join(", ")]));
 		}
-
-		frm.set_query("party", function () {
-			if (frm.doc.party_type == "Employee") {
-				return {
-					query: "erpnext.controllers.queries.employee_query",
-				};
-			} else if (["Customer", "Supplier"].includes(frm.doc.party_type)) {
-				return erpnext.queries.party(frm.doc);
-			} else if (frm.doc.party_type == "Shareholder") {
-				return {
-					filters: {
-						company: frm.doc.company,
-					},
-				};
-			}
-		});
 
 		if (frm.doc.party) {
 			$.each(
@@ -687,7 +690,7 @@ frappe.ui.form.on("Payment Entry", {
 
 									if (
 										frm.doc.paid_from_account_currency ==
-											frm.doc.paid_to_account_currency &&
+										frm.doc.paid_to_account_currency &&
 										frm.doc.paid_amount != frm.doc.received_amount
 									) {
 										if (

@@ -15,6 +15,47 @@ class TestJournalEntry(ERPNextTestSuite):
 	def setUp(self):
 		self.load_test_records("Journal Entry")
 
+	def test_party_must_belong_to_company(self):
+		"""An Employee of one company must not be used on another company's entry."""
+		from erpnext.accounts.doctype.account.test_account import create_account
+		from erpnext.setup.doctype.employee.test_employee import make_employee
+
+		outsider = make_employee("party.company.outsider@example.com", company="_Test Company 1")
+		insider = make_employee("party.company.insider@example.com", company="_Test Company")
+
+		payable = create_account(
+			account_name="_Test Party Company Payable",
+			parent_account="Current Liabilities - _TC",
+			company="_Test Company",
+			account_type="Payable",
+		)
+
+		def make_jv(employee):
+			jv = frappe.new_doc("Journal Entry")
+			jv.company = "_Test Company"
+			jv.posting_date = nowdate()
+			jv.voucher_type = "Journal Entry"
+			jv.append(
+				"accounts",
+				{
+					"account": payable,
+					"party_type": "Employee",
+					"party": employee,
+					"debit_in_account_currency": 100,
+				},
+			)
+			jv.append("accounts", {"account": "_Test Bank - _TC", "credit_in_account_currency": 100})
+			return jv
+
+		self.assertRaisesRegex(
+			frappe.ValidationError, "Row 1: .*does not belong to company", make_jv(outsider).insert
+		)
+
+		# an employee of the entry's own company is accepted
+		jv = make_jv(insider)
+		jv.insert()
+		self.assertTrue(jv.name)
+
 	@ERPNextTestSuite.change_settings("Accounts Settings", {"unlink_payment_on_cancellation_of_invoice": 1})
 	def test_journal_entry_with_against_jv(self):
 		jv_invoice = frappe.copy_doc(self.globalTestRecords["Journal Entry"][2])

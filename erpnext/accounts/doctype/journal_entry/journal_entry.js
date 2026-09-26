@@ -519,6 +519,18 @@ Object.assign(erpnext.journal_entry, {
 			};
 		});
 
+		frm.set_query("party", "accounts", (doc, cdt, cdn) => {
+			const row = frappe.get_doc(cdt, cdn);
+			if (row.party_type == "Employee") {
+				return {
+					query: "erpnext.controllers.queries.employee_query",
+					filters: { company: doc.company },
+				};
+			} else if (row.party_type == "Shareholder") {
+				return { filters: { company: doc.company } };
+			}
+		});
+
 		frm.set_query("reference_name", "accounts", (doc, cdt, cdn) => {
 			return erpnext.journal_entry.reference_name_query(frappe.get_doc(cdt, cdn));
 		});
