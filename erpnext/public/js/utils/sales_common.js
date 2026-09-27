@@ -521,14 +521,8 @@ erpnext.sales_common = {
 			}
 
 			project(doc, cdt, cdn) {
-				if (!cdt || !cdn) {
-					if (this.frm.doc.project) {
-						$.each(this.frm.doc["items"] || [], function (i, item) {
-							if (!item.project) {
-								frappe.model.set_value(item.doctype, item.name, "project", doc.project);
-							}
-						});
-					}
+				if (!cdt || cdt === this.frm.doctype) {
+					this.set_project_in_items();
 				} else {
 					const item = frappe.get_doc(cdt, cdn);
 					if (item.project) {

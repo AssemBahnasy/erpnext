@@ -666,6 +666,7 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 		// real currency change can be told apart from a mere exchange rate refresh
 		// (e.g. triggered by a date change).
 		this._doc_currency = this.frm.doc.currency;
+		this._doc_project = this.frm.doc.project;
 		this.set_dynamic_labels();
 		this.setup_sms();
 		this.setup_quality_inspection();
@@ -673,6 +674,20 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 		erpnext.utils.view_serial_batch_nos(this.frm);
 		this.set_route_options_for_new_doc();
 		erpnext.toggle_serial_batch_fields(this.frm);
+	}
+
+	set_project_in_items() {
+		const project = this.frm.doc.project;
+		if (!project) return;
+
+		const previous = this._doc_project;
+		this._doc_project = project;
+
+		(this.frm.doc.items || []).forEach((item) => {
+			if (item.project != project && (!item.project || item.project == previous)) {
+				frappe.model.set_value(item.doctype, item.name, "project", project);
+			}
+		});
 	}
 
 	scan_barcode() {
@@ -1021,7 +1036,7 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 				"Purchase Order Item",
 				"Purchase Receipt Item",
 			]),
-			cdt)
+				cdt)
 		)
 			this.apply_pricing_rule_on_item(item);
 		else
@@ -1601,7 +1616,7 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 				"Purchase Order",
 				"Purchase Receipt",
 			]),
-			this.frm.doc.doctype)
+				this.frm.doc.doctype)
 		) {
 			var me = this;
 			$.each(this.frm.doc.items || [], function (i, d) {
@@ -2351,7 +2366,7 @@ erpnext.TransactionController = class TransactionController extends erpnext.taxe
 						"Purchase Order Item",
 						"Purchase Receipt Item",
 					]),
-					d.doctype)
+						d.doctype)
 				) {
 					item_list[0]["margin_type"] = d.margin_type;
 					item_list[0]["margin_rate_or_amount"] = d.margin_rate_or_amount;
